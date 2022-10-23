@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, Alert } from 'react-native';
 import { Camera } from 'expo-camera';
+import axios from "axios"
 
 import CheckBox from './src/CheckBox';
 import ImageContainer from './src/Image';
@@ -11,7 +12,9 @@ export default function App() {
   // const [image, setImage] = useState(null);
   // const [type, setType] = useState(Camera.Constants.Type.back);
   const [next, setNext] = useState(false);
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState('');
+  const [text, setText] = useState('');
+  const [msg, setMessage] = useState('');
 
   const [allergies, setAllergies] = useState(
     {milk: false, 
@@ -24,8 +27,27 @@ export default function App() {
     soybeans: false  
   });
 
+  const createFormData = (uri) => {
+    const fileName = uri.split('/').pop();
+    const fileType = fileName.split('.').pop();
+    const formData = new FormData();
+    
+    formData.append('file', { 
+      uri, 
+      name: fileName, 
+      type: `image/${fileType}` 
+    });
+    
+    return formData;
+  }
+
   const onSubmit = async () => {
+
+
     console.log(image);
+    const formData = await createFormData(image);
+
+    console.log("formData", formData);
 
     const keys = Object.keys(allergies);
 
@@ -33,7 +55,41 @@ export default function App() {
         return allergies[key]
     });
 
-    console.log("DSfhjd", filtered);
+    console.log("formData", filtered);
+
+    axios.post( "http://10.65.124.238:8080/post_allergies",
+      filtered
+    )
+      .then(function (response) {
+        //handle success
+        // console.log(rsesponse);
+      })
+      .catch(function (response) {
+        //handle error
+        console.log(response);
+      });
+
+    axios({
+      method: "post",
+      url: "http://10.65.124.238:8080/get_text",
+      data: formData,
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+      .then(function (response) {
+        //handle success
+        setMessage(response.data.message)
+        Alert.alert(response.data.message)
+        // console.log(response.data.message);
+      })
+      .catch(function (response) {
+        //handle error
+        console.log(response);
+      });
+
+   
+
+    // allergies = Object.keys(allergies).filter(function(key) {
+    //   return obj[key]
   };
 
 useEffect(() => {
@@ -43,6 +99,9 @@ useEffect(() => {
     })();
   }, []);
 
+  openAlert=()=>{
+    alert('Alert with one button');
+  }
 
 if (hasPermission === null) {
     return <View />;
@@ -52,12 +111,13 @@ if (hasPermission === null) {
   }
   return (
     <View style={styles.container}>
-      <View>
-      <Image source={require('./assets/icon1.png')} style={{ width: 60, height: 60 }} />
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Ingrediant Checker</Text>
+        <Image source={require('./assets/icon1.png')} />
       </View>
-      {!next ? (
-      <View>
+      {!next ? (<View>
           <Text style={styles.text}>What type of food allergies do you have?</Text>
+
           <CheckBox
             onPress={() => setAllergies({ ...allergies, milk: !allergies.milk })}
             title="Milk"
@@ -94,19 +154,30 @@ if (hasPermission === null) {
         </View>
         ) : <></>}
 
-      {next ? <ImageContainer onSubmit={onSubmit} image={image} setImage={setImage}/> : <></>}
+      {next ? <ImageContainer onSubmit={onSubmit} image={image} setImage={setImage}/>: <></>}
+      
+
     </View>
   );
 }
 const styles = StyleSheet.create({
   container: {
-    // backgroundColor: "#696969",
-    flex: 1,
-    alignItems: 'center',
-    // elevation: 10,
-    // zIndex:20,
-    marginTop: 40,
+    flex: 2,
+    elevation: 10,
+    zIndex:20,
+    padding: 16,
     alignContent: 'center'
+  },
+  header: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  headerText: {
+    padding: 10,
+    fontSize: 20,
+    color: "#009688"
   },
   text: {
     paddingTop: 40,
@@ -115,5 +186,18 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingTop: 12,
   },
-  
+  button: {
+    elevation: 0,
+    backgroundColor: "#009688",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12
+  },
+  appButtonText: {
+    fontSize: 18,
+    color: "#fff",
+    fontWeight: "bold",
+    alignSelf: "center",
+    textTransform: "uppercase"
+  }
 });

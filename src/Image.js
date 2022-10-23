@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Button, View } from "react-native";
 import React, { useState } from 'react';
-import { Camera } from 'expo-camera';
+import { AutoFocus, Camera } from 'expo-camera';
 
 import HelperButton from './Button';
 import { IconButton, Colors } from 'react-native-paper';
@@ -25,7 +25,7 @@ const ImageContainer = ({image, setImage, onSubmit}) => {
 
 	return (
     <View style={styles.container}>
-      {!image && <View style={styles.cameraContainer}>
+      {!image ? (<><View style={styles.cameraContainer}>
         <Camera 
           ref={ref => setCamera(ref)} 
           style={styles.camera} 
@@ -33,45 +33,35 @@ const ImageContainer = ({image, setImage, onSubmit}) => {
           ratio={'1:1'} 
         />
       </View>
-      }
-      {!image && <IconButton
+      <IconButton
       icon="camera"
       color="#E6896B"
-      size={20}
+      size={50}
       onPress={() => takePicture()}
-      />}
-      
-      {/* <HelperButton
-        style={styles.button}
-        title="Flip Image"
-        >
-      </HelperButton> */}
-      {/* <IconButton
-      icon="camera-reverse"
-      color="#E6896B"
-      size={20}
-      onPress={() => {
-        setType(
-          type === Camera.Constants.Type.back
-            ? Camera.Constants.Type.front
-            : Camera.Constants.Type.back
-        );
-      }}
-      /> */}
-     
-      
-      {/* <HelperButton title="Take Picture"  /> */}
-      {image && (<><View style={styles.cameraContainer}><Image source={{uri: image}} style={{flex:1}} />
-   
-      
-      </View>
+      />
+      </>)
+: (
+       <>
+       <View style={styles.cameraContainer}>
+         <Image source={{uri: image}} style={{flex: 1}}/>
+         <View style ={styles.footer}>
          <IconButton
-         icon="arrow-right-circle"
-         color="#E6896B"
-         size={40}
-         onPress={() => onSubmit()}
-         />
-         </>
+          icon="reload"
+          color="#E6896B"
+          size={50}
+          onPress={() => setImage()}
+          />
+          <IconButton
+          icon="arrow-right-circle"
+          color="#E6896B"
+          size={50}
+          onPress={() => onSubmit()}
+          />
+          </View>
+     
+      </View>
+        
+      </>
       )}
       </View>
 	);
@@ -82,16 +72,24 @@ export default ImageContainer;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignContent: 'center'
+        alignItems: 'center'
       },
     camera: {
-        marginTop: 20,
         flex: 1,
-        aspectRatio: 1,
       },
       cameraContainer: {
         flex: 1,
-        flexDirection: 'row'
+        marginTop: 10,
+        aspectRatio: 1,
+
+        // alignItems: 'center'
+
+      },
+      footer: {
+        margin: 10,
+        flexDirection: 'row',
+        justifyContent:'center',
+        alignItems: 'center'
       },
       buttonContainer: {
         paddingTop: 12,
